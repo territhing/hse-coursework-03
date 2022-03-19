@@ -1,0 +1,35 @@
+stages:
+  - build
+  - publish
+
+variables:
+  LATEX_IMAGE: listx/texlive:2020
+  ARTIFACTS_DIR: artifacts
+  DROPBOX_UPLOADER_CONFIG:
+    CONFIGFILE_VERSION=$CONFIGFILE_VERSION
+    OAUTH_APP_KEY=$OAUTH_APP_KEY
+    OAUTH_APP_SECRET=$OAUTH_APP_SECRET
+    OAUTH_REFRESH_TOKEN=$OAUTH_REFRESH_TOKEN
+
+build:
+  stage: build
+  image: $LATEX_IMAGE
+  script:
+    - sh build/compile.sh
+  cache:
+    paths:
+      - artifacts/*
+  artifacts:
+    paths:
+      - "artifacts/*.pdf"
+
+publish:
+  stage: publish
+  dependencies:
+    - build
+  script:
+    - echo $DROPBOX_UPLOADER_CONFIG > ~/.dropbox_uploader
+    - chmod +x build/dropbox-uploader.sh
+    - ./build/dropbox-uploader.sh mkdir $CI_PROJECT_NAME
+    - ./build/dropbox-uploader.sh upload artifacts/*.pdf $CI_PROJECT_NAME
+  
