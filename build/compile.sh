@@ -1,5 +1,7 @@
 # Configuration variables
-TargetDirectories=thesis/hse-research-thesis-year-3-Pilipenko-Sergey.tex
+TargetDirectories=(
+    thesis/hse-research-thesis-year-3-Pilipenko-Sergey.tex
+)
 ArtifactDirectory=artifacts/
 
 
