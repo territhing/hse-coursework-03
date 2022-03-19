@@ -15,7 +15,7 @@ build:
   stage: build
   image: $LATEX_IMAGE
   script:
-    - sh build/compile.sh
+    - bash build/compile.sh
   cache:
     paths:
       - artifacts/*

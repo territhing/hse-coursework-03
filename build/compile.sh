@@ -1,10 +1,5 @@
 # Configuration variables
-TargetDirectories=(
-    homework-practice-01/homework-practice-01-Pilipenko-Sergey.tex
-    homework-practice-02/homework-practice-02-Pilipenko-Sergey.tex
-    homework-theory-01/homework-theory-01-Pilipenko-Sergey.tex
-    homework-theory-02/homework-theory-02-Pilipenko-Sergey.tex
-)
+TargetDirectories=thesis/hse-research-thesis-year-3-Pilipenko-Sergey.tex
 ArtifactDirectory=artifacts/
 
 
