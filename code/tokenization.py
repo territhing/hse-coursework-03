@@ -54,6 +54,7 @@ class PunctuationTokenizer:
             token for token, _ in self.punctuation_tokenizer.pre_tokenize_str(text)
         ]
         if not tokens[0].isalnum():
+            # TODO: What to do with the first punctuation symbol?
             tokens.pop(0)
         if not tokens:
             return torch.empty(1), torch.empty(1)
