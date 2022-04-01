@@ -41,7 +41,7 @@ class PunctuationTokenizer:
         self.inv_punctuation_vocab: tp.Optional[dict[int, str]] = None
         self.truncation_threshold = truncation_threshold
 
-    def __call__(self, text: str) -> (torch.Tensor, torch.Tensor):
+    def encode(self, text: str) -> (torch.Tensor, torch.Tensor, torch.Tensor):
         if self.punctuation_vocab is None:
             raise TokenizationEmptyVocabularyError(
                 "called tokenizer with an empty vocabulary. Consider calling tokenizer.build_vocab() beforehand"
@@ -85,9 +85,9 @@ class PunctuationTokenizer:
         punctuations.append(self.punctuation_vocab[SpecialTokens.SEP.value])
 
         inputs = torch.tensor(words)
-        target = torch.tensor(punctuations)
+        targets = torch.tensor(punctuations)
         attention_mask = torch.ones_like(inputs)
-        return inputs, attention_mask, target
+        return inputs, attention_mask, targets
 
     def decode(
         self, inputs: torch.Tensor, attention_mask: torch.Tensor, targets: torch.Tensor
@@ -159,7 +159,7 @@ def main():
     # tokenizer.build_vocab(corpus, cache_file_path)
     tokenizer.load_vocab(cache_file_path)
     for i, text in enumerate(corpus):
-        inputs, attention_mask, targets = tokenizer(text)
+        inputs, attention_mask, targets = tokenizer.encode(text)
         print(tokenizer.decode(inputs, attention_mask, targets))
         break
 
