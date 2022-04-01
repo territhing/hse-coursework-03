@@ -306,3 +306,6 @@ TSWLatexianTemp*
 
 # build files
 artifacts/*
+
+venv/*
+.idea/*
