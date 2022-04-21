@@ -1,6 +1,7 @@
 import enum
 import json
 import pathlib
+import pprint
 import typing as tp
 
 import pandas as pd
@@ -29,6 +30,10 @@ class TokenizationEmptyVocabularyError(TokenizationError):
     pass
 
 
+def _is_word(token: str) -> bool:
+    return all(s.isalnum() or s == "" for s in token.split("_"))
+
+
 class PunctuationTokenizer:
     def __init__(self, model_name: str, truncation_threshold: tp.Optional[int] = None):
         self.backend_tokenizer: BertTokenizerFast = AutoTokenizer.from_pretrained(
@@ -37,8 +42,8 @@ class PunctuationTokenizer:
         self.punctuation_tokenizer = pre_tokenizers.Split(
             tokenizers.Regex(r"\w+"), behavior="isolated"
         )
-        self.punctuation_vocab: tp.Optional[dict[str, int]] = None
-        self.inv_punctuation_vocab: tp.Optional[dict[int, str]] = None
+        self.punctuation_vocab: tp.Optional[tp.Dict[str, int]] = None
+        self.inv_punctuation_vocab: tp.Optional[tp.Dict[int, str]] = None
         self.truncation_threshold = truncation_threshold
 
     def encode(self, text: str) -> (torch.Tensor, torch.Tensor, torch.Tensor):
@@ -53,14 +58,13 @@ class PunctuationTokenizer:
         tokens = [
             token for token, _ in self.punctuation_tokenizer.pre_tokenize_str(text)
         ]
-        if not tokens[0].isalnum():
+        if not _is_word(tokens[0]):
             # TODO: What to do with the first punctuation symbol?
             tokens.pop(0)
         if not tokens:
             return torch.empty(1), torch.empty(1)
-        if tokens[-1].isalnum():
+        if _is_word(tokens[-1]):
             tokens.append(SpecialTokens.EMPTY.value)
-        assert len(tokens) % 2 == 0
 
         # Prepend the [CLS] token, which is required for BERT-like models
         words = [self.backend_tokenizer.vocab[SpecialTokens.CLS.value]]
@@ -70,6 +74,8 @@ class PunctuationTokenizer:
         for word, punc in zip(tokens[::2], tokens[1::2]):
             # Encode single word and strip [CLS] and [SEP] from its boundaries
             word_tokenized = self.backend_tokenizer.encode(word)[1:-1]
+            if not word_tokenized:
+                continue
             punc_tokenized = [self.punctuation_vocab[SpecialTokens.EMPTY.value]] * len(
                 word_tokenized
             )
@@ -124,7 +130,7 @@ class PunctuationTokenizer:
         filename: pathlib.Path,
         *,
         vocab_size: int = 30000,
-        min_frequency: int = 0,
+        min_frequency: int = 1000,
     ) -> None:
         tokenizer = Tokenizer(WordLevel(unk_token=SpecialTokens.UNK.value))  # type: ignore
         tokenizer.pre_tokenizer = pre_tokenizers.Split(
@@ -162,7 +168,9 @@ def main():
     for i, text in enumerate(corpus):
         inputs, attention_mask, targets = tokenizer.encode(text)
         print(tokenizer.decode(inputs, attention_mask, targets))
-        break
+        if i == 9: break
+    pprint.pprint(tokenizer.punctuation_vocab)
+    print(len(tokenizer.punctuation_vocab))
 
 
 if __name__ == "__main__":
